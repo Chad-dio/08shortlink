@@ -1,6 +1,7 @@
 package org.chad.shortlink.admin.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.chad.shortlink.admin.domain.dto.UserRegisterDTO;
 import org.chad.shortlink.admin.domain.entity.Result;
 import org.chad.shortlink.admin.service.UserService;
 import org.springframework.web.bind.annotation.*;
@@ -17,21 +18,21 @@ public class UserController {
         return userService.getUserByUsername(username);
     }
 
-    @GetMapping("/api/short-link/admin/v1/actual/user/{username}")
+    @GetMapping("/actual/{username}")
     public Result getActualUserByUsername(@PathVariable String username){
         return userService.getActualUserByUsername(username);
     }
 
-    @GetMapping("/api/short-link/admin/v1/user/has-username")
+    @GetMapping("/has-username")
     public Result hasUsername(@RequestParam String username){
         return userService.hasUsername(username);
     }
 
-//    @PostMapping("/api/short-link/admin/v1/user")
-//    public Result<Void> register(@RequestBody UserRegisterReqDTO userRegisterReqDTO){
-//        userService.Register(userRegisterReqDTO);
-//        return Result.success();
-//    }
+    @PostMapping
+    public Result<Void> register(@RequestBody UserRegisterDTO userRegisterReqDTO){
+        userService.Register(userRegisterReqDTO);
+        return Result.success();
+    }
 
 //    @PutMapping("/api/short-link/admin/v1/user")
 //    public Result<Void> update(@RequestBody UserRegisterReqDTO userRegisterReqDTO){

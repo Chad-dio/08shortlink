@@ -24,3 +24,14 @@ spring:
           max-idle: 10
           min-idle: 1
           time-between-eviction-runs: 10s
+#mybatis-plus:
+#  type-aliases-package: org.chad.shortlink.admin.domain.po
+#  global-config:
+#    db-config:
+#      id-type: auto
+#      logic-delete-field: deleted # 配置逻辑删除字段
+#  configuration:
+#    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+#
+knife4j:
+  enable: true
