@@ -1,7 +1,10 @@
 package org.chad.shortlink.admin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +13,7 @@ import org.chad.shortlink.admin.domain.dto.UserRegisterDTO;
 import org.chad.shortlink.admin.domain.entity.Result;
 import org.chad.shortlink.admin.domain.po.User;
 import org.chad.shortlink.admin.domain.vo.ActualUserVO;
+import org.chad.shortlink.admin.domain.vo.UserLoginVO;
 import org.chad.shortlink.admin.domain.vo.UserVO;
 import org.chad.shortlink.admin.mapper.UserMapper;
 import org.chad.shortlink.admin.service.UserService;
@@ -20,7 +24,12 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 import static org.chad.shortlink.admin.common.constant.RedisCacheConstant.LOCK_USER_REGISTER_KEY;
+import static org.chad.shortlink.admin.common.constant.RedisCacheConstant.USER_LOGIN_KEY;
 
 @Service
 @RequiredArgsConstructor
@@ -73,22 +82,50 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Result Update(UserRegisterDTO userRegisterReqDTO) {
-        return null;
+        // TODO 验证当前用户名是否为登录用户
+        LambdaUpdateWrapper<User> updateWrapper = Wrappers.lambdaUpdate(User.class)
+                .eq(User::getUsername, userRegisterReqDTO.getUsername());
+        baseMapper.update(BeanUtil.toBean(userRegisterReqDTO, User.class), updateWrapper);
+        return Result.success();
     }
 
     @Override
     public Result Login(UserLoginDTO userLoginReqDTO) {
-        return null;
+        LambdaQueryWrapper<User> queryWrapper = Wrappers.lambdaQuery(User.class)
+                .eq(User::getUsername, userLoginReqDTO.getUsername())
+                .eq(User::getPassword, userLoginReqDTO.getPassword())
+                .eq(User::getDelFlag, 0);
+        User user = baseMapper.selectOne(queryWrapper);
+        if (BeanUtil.isEmpty(user)) {
+            return Result.error("用户不存在");
+        }
+        Map<Object, Object> hasLoginMap = stringRedisTemplate.opsForHash().entries(USER_LOGIN_KEY + userLoginReqDTO.getUsername());
+        if (CollUtil.isNotEmpty(hasLoginMap)) {
+            stringRedisTemplate.expire(USER_LOGIN_KEY + userLoginReqDTO.getUsername(), 30L, TimeUnit.MINUTES);
+            String token = hasLoginMap.keySet().stream()
+                    .findFirst()
+                    .map(Object::toString)
+                    .toString();
+            return Result.success(new UserLoginVO(token));
+        }
+        String uuid = UUID.randomUUID().toString();
+        stringRedisTemplate.opsForHash().put(USER_LOGIN_KEY + userLoginReqDTO.getUsername(), uuid, JSON.toJSONString(user));
+        stringRedisTemplate.expire(USER_LOGIN_KEY + userLoginReqDTO.getUsername(), 30L, TimeUnit.MINUTES);
+        return Result.success(new UserLoginVO(uuid));
     }
 
     @Override
     public Result check_login(String username, String token) {
-        return null;
+        return Result.success(stringRedisTemplate.opsForHash().get(USER_LOGIN_KEY + username, token) != null);
     }
 
     @Override
     public Result logout(String username, String token) {
-        return null;
+        if (stringRedisTemplate.opsForHash().get(USER_LOGIN_KEY + username, token) != null) {
+            stringRedisTemplate.delete(USER_LOGIN_KEY + username);
+            return Result.success();
+        }
+        return Result.error("用户Token不存在或用户未登录");
     }
 
     @Override
