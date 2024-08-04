@@ -20,6 +20,10 @@ public final class UserContext {
         USER_THREAD_LOCAL.set(user);
     }
 
+    public static UserInfoDTO getUser() {
+        return USER_THREAD_LOCAL.get();
+    }
+
     /**
      * 获取上下文中用户 ID
      *

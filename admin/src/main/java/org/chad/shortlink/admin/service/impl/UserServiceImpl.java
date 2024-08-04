@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.chad.shortlink.admin.common.user.UserContext;
+import org.chad.shortlink.admin.common.user.UserInfoDTO;
 import org.chad.shortlink.admin.domain.dto.UserLoginDTO;
 import org.chad.shortlink.admin.domain.dto.UserRegisterDTO;
 import org.chad.shortlink.admin.domain.entity.Result;
@@ -82,10 +84,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Result Update(UserRegisterDTO userRegisterReqDTO) {
-        // TODO 验证当前用户名是否为登录用户
+        if(!UserContext.getUser().getUsername().equals(userRegisterReqDTO.getUsername())){
+            return Result.error("修改失败");
+        }
         LambdaUpdateWrapper<User> updateWrapper = Wrappers.lambdaUpdate(User.class)
                 .eq(User::getUsername, userRegisterReqDTO.getUsername());
-        baseMapper.update(BeanUtil.toBean(userRegisterReqDTO, User.class), updateWrapper);
+        User user = BeanUtil.toBean(userRegisterReqDTO, User.class);
+        baseMapper.update(user, updateWrapper);
+        UserContext.setUser(BeanUtil.copyProperties(user, UserInfoDTO.class));
         return Result.success();
     }
 

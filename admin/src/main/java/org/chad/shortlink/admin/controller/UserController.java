@@ -29,7 +29,7 @@ public class UserController {
         return userService.hasUsername(username);
     }
 
-    @PostMapping
+    @PostMapping("/register")
     public Result register(@RequestBody UserRegisterDTO userRegisterReqDTO){
         return userService.Register(userRegisterReqDTO);
     }
