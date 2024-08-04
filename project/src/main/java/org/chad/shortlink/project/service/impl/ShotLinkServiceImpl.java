@@ -3,16 +3,19 @@ package org.chad.shortlink.project.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.StrBuilder;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.chad.shortlink.project.domain.dto.ShortLinkBatchCreateDTO;
 import org.chad.shortlink.project.domain.dto.ShortLinkCreateDTO;
+import org.chad.shortlink.project.domain.dto.ShortLinkPageDTO;
 import org.chad.shortlink.project.domain.dto.ShortLinkUpdateDTO;
 import org.chad.shortlink.project.domain.entity.Result;
 import org.chad.shortlink.project.domain.po.ShortLink;
 import org.chad.shortlink.project.domain.vo.ShortLinkCreateVO;
+import org.chad.shortlink.project.domain.vo.ShortLinkPageVO;
 import org.chad.shortlink.project.mapper.ShortLinkMapper;
 import org.chad.shortlink.project.service.ShortLinkService;
 import org.chad.shortlink.project.util.HashUtil;
@@ -31,9 +34,9 @@ public class ShotLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink>
 
     @Override
     public Result<ShortLinkCreateVO> createShortLink(ShortLinkCreateDTO requestParam) {
-        String shortLinkSuffix = null;
+        String shortLinkSuffix;
         try{
-            generateSuffix(requestParam);
+            shortLinkSuffix = generateSuffix(requestParam);
         }catch (Exception e){
             return Result.error("短链接生成次数过多");
         }
@@ -81,6 +84,18 @@ public class ShotLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink>
     @Override
     public Result updateShortLink(ShortLinkUpdateDTO requestParam) {
         return null;
+    }
+
+    @Override
+    public Result<IPage<ShortLinkPageVO>> pageShortLink(ShortLinkPageDTO requestParam) {
+        LambdaQueryWrapper<ShortLink> queryWrapper = Wrappers.lambdaQuery(ShortLink.class)
+                .eq(ShortLink::getGid, requestParam.getGid())
+                .eq(ShortLink::getEnableStatus, 0)
+                .eq(ShortLink::getDelFlag, 0)
+                .orderByDesc(ShortLink::getCreateTime);
+        IPage<ShortLink>  resultPage = baseMapper.selectPage(requestParam, queryWrapper);
+        IPage<ShortLinkPageVO> page = resultPage.convert(each -> BeanUtil.toBean(each, ShortLinkPageVO.class));
+        return Result.success(page);
     }
 
     private String generateSuffix(ShortLinkCreateDTO requestParam) throws Exception {

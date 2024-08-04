@@ -1,12 +1,15 @@
 package org.chad.shortlink.project.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.chad.shortlink.project.domain.dto.ShortLinkBatchCreateDTO;
 import org.chad.shortlink.project.domain.dto.ShortLinkCreateDTO;
+import org.chad.shortlink.project.domain.dto.ShortLinkPageDTO;
 import org.chad.shortlink.project.domain.dto.ShortLinkUpdateDTO;
 import org.chad.shortlink.project.domain.entity.Result;
 import org.chad.shortlink.project.domain.po.ShortLink;
 import org.chad.shortlink.project.domain.vo.ShortLinkCreateVO;
+import org.chad.shortlink.project.domain.vo.ShortLinkPageVO;
 
 public interface ShortLinkService extends IService<ShortLink> {
 
@@ -32,14 +35,14 @@ public interface ShortLinkService extends IService<ShortLink> {
      * @param requestParam 修改短链接请求参数
      */
     Result updateShortLink(ShortLinkUpdateDTO requestParam);
-//
-//    /**
-//     * 分页查询短链接
-//     *
-//     * @param requestParam 分页查询短链接请求参数
-//     * @return 短链接分页返回结果
-//     */
-//    IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam);
+
+    /**
+     * 分页查询短链接
+     *
+     * @param requestParam 分页查询短链接请求参数
+     * @return 短链接分页返回结果
+     */
+    Result<IPage<ShortLinkPageVO>> pageShortLink(ShortLinkPageDTO requestParam);
 //
 //    /**
 //     * 查询短链接分组内数量
