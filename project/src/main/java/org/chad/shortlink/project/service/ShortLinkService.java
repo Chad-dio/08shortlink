@@ -16,7 +16,7 @@ public interface ShortLinkService extends IService<ShortLink> {
      * @param requestParam 创建短链接请求参数
      * @return 短链接创建信息
      */
-    Result<ShortLinkCreateVO> createShortLink(ShortLinkCreateDTO requestParam) throws Exception;
+    Result<ShortLinkCreateVO> createShortLink(ShortLinkCreateDTO requestParam);
 
     /**
      * 批量创建短链接

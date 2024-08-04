@@ -5,7 +5,6 @@ import cn.hutool.core.text.StrBuilder;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.google.protobuf.ServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.chad.shortlink.project.domain.dto.ShortLinkBatchCreateDTO;
@@ -31,8 +30,13 @@ public class ShotLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink>
     private final RBloomFilter<String> shortUriCreateCachePenetrationBloomFilter;
 
     @Override
-    public Result<ShortLinkCreateVO> createShortLink(ShortLinkCreateDTO requestParam) throws Exception {
-        String shortLinkSuffix = generateSuffix(requestParam);
+    public Result<ShortLinkCreateVO> createShortLink(ShortLinkCreateDTO requestParam) {
+        String shortLinkSuffix = null;
+        try{
+            generateSuffix(requestParam);
+        }catch (Exception e){
+            return Result.error("短链接生成次数过多");
+        }
         String fullShortUrl = StrBuilder.create(requestParam.getDomain())
                 .append("/")
                 .append(shortLinkSuffix)
@@ -57,7 +61,7 @@ public class ShotLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink>
             ShortLink hasShortLink = baseMapper.selectOne(queryWrapper);
             if(BeanUtil.isNotEmpty(hasShortLink)){
                 log.info("key重复");
-                throw new ServiceException("短链接重复");
+                return  Result.error("短链接重复");
             }
         }
         shortUriCreateCachePenetrationBloomFilter.add(shortLinkSuffix);
